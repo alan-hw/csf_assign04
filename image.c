@@ -3,6 +3,8 @@
 // See image.h for documentation
 //
 
+//hello world!
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
