@@ -34,7 +34,7 @@ char** get_new_argv(char **argv){
 }
 
 int main(int argc, char* argv[]){
-    char* plugin_dir_name;
+    const char* plugin_dir_name;
     struct dirent *entry;
     if ((plugin_dir_name = getenv("PLUGIN_DIR")) == NULL) {
         plugin_dir_name = "./plugins";
@@ -52,11 +52,17 @@ int main(int argc, char* argv[]){
     strcat(plugin_location, "./plugins/");
     struct Plugin plugin;
     struct Plugin* plugins = calloc(1, 4 * sizeof(struct Plugin));
-    while((entry=readdir(plugin_dir))) {
-        name = entry->d_name;
-        if (name[strlen(name)-3] == '.' && name[strlen(name)-2] == 's' && name[strlen(name)-1] == 'o'){
-	  char temp_path[100];
-	  strcpy(temp_path,plugin_location);
+    
+    while((entry=readdir(plugin_dir)) != NULL) {
+
+        if ( !strcmp(entry->d_name, ".") || !strcmp(entry->d_name, "..") )
+        {
+            // do nothing (straight logic)
+        } else {
+	  name = entry->d_name;
+	  if (name[strlen(name)-3] == '.' && name[strlen(name)-2] == 's' && name[strlen(name)-1] == 'o'){
+	    char temp_path[100];
+	    strcpy(temp_path,plugin_location);
             strcat(temp_path, name);
             //printf("the string is %s\n", plugin_location);
             plugin.handle = dlopen(temp_path, RTLD_LAZY);
@@ -70,10 +76,12 @@ int main(int argc, char* argv[]){
             *(void **)(&plugin.transform_image) = dlsym(plugin.handle, "transform_image");
             plugins[counter] = plugin;
             counter++;
-        }
+	  }
+	}
     }
-    closedir(plugin_dir);
-    
+    if(plugin_dir!=NULL){ 
+      closedir(plugin_dir);
+    }
     if (argc == 2 && !strcmp(argv[1], "list")) {
         printf("Loaded %d plugin(s)\n", counter);
         for (int i = 0; i < counter; i++) {
