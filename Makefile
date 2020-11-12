@@ -19,8 +19,6 @@ all : imgproc $(PLUGINS)
 imgproc : imgproc.o image.o pnglite.o
 	$(CC) -export-dynamic -o $@ imgproc.o image.o pnglite.o -lz -ldl
 
-plugins/swapbg.so : swapbg.o
-
 clean :
 	rm -f *.o imgproc plugins/*.so depend.mak
 

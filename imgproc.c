@@ -55,9 +55,11 @@ int main(int argc, char* argv[]){
     while((entry=readdir(plugin_dir))) {
         name = entry->d_name;
         if (name[strlen(name)-3] == '.' && name[strlen(name)-2] == 's' && name[strlen(name)-1] == 'o'){
-            strcat(plugin_location, name);
+	  char temp_path[100];
+	  strcpy(temp_path,plugin_location);
+            strcat(temp_path, name);
             //printf("the string is %s\n", plugin_location);
-            plugin.handle = dlopen(plugin_location, RTLD_LAZY);
+            plugin.handle = dlopen(temp_path, RTLD_LAZY);
             if (!plugin.handle) {
                 printf("an image plugin can't be loaded\n");
                 return 1;
@@ -75,7 +77,7 @@ int main(int argc, char* argv[]){
     if (argc == 2 && !strcmp(argv[1], "list")) {
         printf("Loaded %d plugin(s)\n", counter);
         for (int i = 0; i < counter; i++) {
-            //printf("%s: %s\n", *(plugins[i].get_plugin_name()), *(plugins[i].get_plugin_desc()));
+	  //printf("%s: %s\n", (plugins[i].get_plugin_name()), (plugins[i].get_plugin_desc()));
             printf("%s: %s\n", plugins[0].get_plugin_name(), plugins[0].get_plugin_desc());
 
         }
