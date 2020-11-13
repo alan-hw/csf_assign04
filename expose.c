@@ -1,7 +1,7 @@
 //
 // The expose plugin changes all red/green/blue color component values by a specified factor.
 //
-
+#include <stdio.h>
 #include <stdlib.h>
 #include "image_plugin.h"
 
@@ -19,7 +19,6 @@ const char *get_plugin_desc(void) {
 }
 
 void *parse_arguments(int num_args, char *args[]) {
-	(void) args; // this is just to avoid a warning about an unused parameter
 
 	if (num_args != 1||atof(args[0])<0) {
 		return NULL;
@@ -69,9 +68,12 @@ struct Image *transform_image(struct Image *source, void *arg_data) {
 	// Allocate a result Image
 	struct Image *out = img_create(source->width, source->height);
 	if (!out) {
+        printf("Memory allocation fails.\n");
 		free(args);
 		return NULL;
 	}
+    out->width = source->width;
+    out->height = source->height;
 
 	unsigned num_pixels = source->width * source->height;
 	for (unsigned i = 0; i < num_pixels; i++) {

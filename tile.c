@@ -1,7 +1,7 @@
 //
 // The tile plugin generates an image containing an N x N arrangement of tiles, //each tile being a smaller version of the original image, and the overall resul//t image having the same dimensions as the original image. It takes one command// line parameter, an integer specifying the tiling factor N.
 //
-
+#include <stdio.h>
 #include <stdlib.h>
 #include "image_plugin.h"
 
@@ -19,12 +19,9 @@ const char *get_plugin_desc(void) {
 }
 
 void *parse_arguments(int num_args, char *args[]) {
-	(void) args; // this is just to avoid a warning about an unused parameter
-
 	if (num_args != 1||atoi(args[0])<1) {
 		return NULL;
 	}
-
 	struct Arguments *arg = calloc(1, sizeof(struct Arguments));
 	  arg->factor = atoi(args[0]);
 	return arg;
@@ -32,55 +29,43 @@ void *parse_arguments(int num_args, char *args[]) {
 
 
 struct Image *transform_image(struct Image *source, void *arg_data) {
-        struct Arguments *args = arg_data;
+    struct Arguments *args = arg_data;
 	//load factor from arguments
 	int factor = args->factor;
-	int row[source->width];
-	int col[source->height];
-
-	int tileWidth = source->width / factor;
-	int tileHeight = source->height / factor;
-	int widthRemainder = source->width % factor;
-	int heightRemainder = source->height % factor;
-
-	for (unsigned i = 0; i < source->width; i++) {
-	  int groupLen = tileWidth;
-	  if (widthRemainder >0){
-	    groupLen++;
-	    widthRemainder--;
-	  }
-	  for(unsigned j = i; j<i+groupLen; j++){
-	    row[j] = j-i;
-	  }
-	  i+=(groupLen-1);
-	}
-	for (unsigned i = 0; i < source->height; i++) {
-	  int groupLen = tileHeight;
-	  if (heightRemainder >0){
-	    groupLen++;
-	    heightRemainder--;
-	  }
-	  for(unsigned j = i; j<i+groupLen; j++){
-	    col[j] = j-i;
-	  }
-	  i+=(groupLen-1);
-	}
-	// Allocate a result Image
-	struct Image *out = img_create(source->width, source->height);
-	if (!out) {
-		free(args);
-		return NULL;
-	}
-
-	for (unsigned i = 0; i < source->width; i++) {
-	  for (unsigned j = 0; j< source->height; j++){
-	    int targetRow = row[i]*factor;
-	    int targetCol = col[j]*factor;
-	    out->data[i*source->width+j] = source->data[targetRow*source->width+targetCol];
+    // Allocate a result Image
+    struct Image *out = img_create(source->width, source->height);
+    if (!out) {
+        printf("Memory allocation fails.\n");
+        free(args);
+        return NULL;
+    }
+    out->width = source->width;
+    out->height = source->height;
+    
+    int tileWidth = source->width / factor;
+    int tileHeight = source->height / factor;
+    // if x-coordinate (j) >= switchX, then it's in a smaller tile (with no excess)
+    int switchX = (source->width - tileWidth * factor) * (tileWidth + 1);
+    // if y-coordinate (i) >= switchY, then it's in a smaller tile (with no excess)
+    int switchY = (source->height - tileHeight * factor) * (tileHeight + 1);
+    
+    // sourceJ, sourceI represent the coordinates that (j,i) on output image corresponds to
+    int sourceI, sourceJ;
+	for (int i = 0; i < (int)source->height; i++) {
+	  for (int j = 0; j < (int)source->width; j++){
+          if(j >= switchX) {
+              sourceJ = ((j - switchX) % (tileWidth)) * factor;
+          } else{
+              sourceJ = (j % (tileWidth + 1)) * factor;
+          }
+          if(i >= switchY) {
+              sourceI = ((i - switchY) % (tileHeight)) * factor;
+          } else{
+              sourceI = (i % (tileHeight + 1)) * factor;
+          }
+	    out->data[i*source->width+j] = source->data[sourceI*source->width+sourceJ];
 	  }
 	}
-
 	free(args);
-
 	return out;
 }

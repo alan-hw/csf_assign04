@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include "image_plugin.h"
+#include <stdio.h>
 
 struct Arguments {
 	// This plugin doesn't accept any command line arguments;
@@ -20,7 +21,7 @@ const char *get_plugin_desc(void) {
 }
 
 void *parse_arguments(int num_args, char *args[]) {
-	(void) args; // this is just to avoid a warning about an unused parameter
+    (void) args; // this is just to avoid a warning about an unused parameter
 
 	if (num_args != 0) {
 		return NULL;
@@ -34,14 +35,19 @@ struct Image *transform_image(struct Image *source, void *arg_data) {
 	// Allocate a result Image
 	struct Image *out = img_create(source->width, source->height);
 	if (!out) {
+        printf("Memory allocation fails.\n");
 		free(args);
 		return NULL;
 	}
+    out->width = source->width;
+    out->height = source->height;
 
-	//for an horizontal flip, the pixel situated at coordinate (x, y) will b        //e situated at coordinate (x, height-1-y) in the new image.
-	for (unsigned i = 0; i < source->width; i++) {
-	  for (unsigned j = 0; j < source->height; j++){
-		out->data[i*source->width+j] = source->data[i*source->width+source->height-1-j];
+	//for an vertical flip, the pixel situated at coordinate (x, y) will b        //e situated at coordinate (x, height-1-y) in the new image.
+	for (unsigned i = 0; i < source->height; i++) {
+	  for (unsigned j = 0; j < source->width; j++){
+        //printf("k = %d width = %d height = %d\n", k, source->width, source->height);
+		out->data[i*source->width+j] = source->data[(source->height-1-i)*source->width+j];
+
 	  }
 	}
 
