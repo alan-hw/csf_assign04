@@ -1,3 +1,8 @@
+//CSF Assignment 4
+//Name: Yuheng Shi
+//Email: yshi58@jhu.edu
+//Name: Yuntao Li
+//Email: yli346@jhu.edu
 //
 // The expose plugin changes all red/green/blue color component values by a specified factor.
 //
@@ -10,14 +15,31 @@ struct Arguments {
 	float factor;
 };
 
+//
+// Get the plugin name as a NUL-terminated character string.
+//
 const char *get_plugin_name(void) {
 	return "expose";
 }
 
+//
+// Get a one-sentence description of what the plugin does
+// as a NUL-terminated character string.
+//
 const char *get_plugin_desc(void) {
 	return "adjust the intensity of all pixels";
 }
 
+//
+// Parse the plugin's command line arguments.
+// num_args indicates how many command line arguments are being passed
+// to the plugin, args is an array of pointers to the command line
+// arguments.
+//
+// Returns NULL if the command line arguments are invalid; otherwise
+// returns a pointer to "argument data" which will be passed to the
+// plugin's transform_image function.
+//
 void *parse_arguments(int num_args, char *args[]) {
 
 	if (num_args != 1||atof(args[0])<0) {
@@ -29,37 +51,40 @@ void *parse_arguments(int num_args, char *args[]) {
 	return arg;
 }
 
+// Helper function to change pixel's color
+static uint8_t change_color(uint8_t color, float factor){
+  	uint32_t newcolor = (uint32_t)color;
+	newcolor *= factor;
+	if(newcolor > 255){
+	  color = 255;
+	}
+	else{
+	  color = (uint8_t)newcolor;
+	}
+	return color;
+}
+
 // Helper function to swap the blue and green color component values.
 static uint32_t change_expose(uint32_t pix, float factor) {
 	uint8_t r, g, b, a;
 	img_unpack_pixel(pix, &r, &g, &b, &a);
-	uint32_t rnew = (uint32_t)r;
-	uint32_t gnew = (uint32_t)g;
-	uint32_t bnew = (uint32_t)b;
-	rnew *= factor;
-	gnew *= factor;
-	bnew *= factor;
-	if(rnew>255){
-	  r=255;
-	}
-	else{
-	  r = (uint8_t)rnew;
-	}
-	if(gnew>255){
-	  g=255;
-	}
-	else{
-	  g = (uint8_t)gnew;
-	}
-	if(bnew>255){
-	  b=255;
-	}
-	else{
-	  b = (uint8_t)bnew;
-	}
+	r = change_color(r, factor);
+	g = change_color(g, factor);
+	b = change_color(b, factor);
 	return img_pack_pixel(r, g, b, a);
 }
 
+//
+// Transform a source Image.
+// The arg_data parameter is the pointer returned by the plugin's
+// parse_arguments function.
+//
+// Returns a pointer to the result Image, or NULL if the plugin
+// could not generate a result image for some reason.
+//
+// This function should free any memory allocated for arg_data
+// by the previous call to parse_arguments.
+//
 struct Image *transform_image(struct Image *source, void *arg_data) {
   struct Arguments *args = arg_data;
 	//load factor from arguments
